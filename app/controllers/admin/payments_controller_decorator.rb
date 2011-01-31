@@ -4,18 +4,15 @@ Admin::PaymentsController.class_eval do
   def fire
     load_object
     if event = params[:e] 
-      if @payment.payment_source
-        return old_fire 
-      else  
-        #Assume payment:check  TODO check this
-        if event == "pay" #only respond to action we stubbed in Payment_decorator
-          if @payment.state == "checkout" #and only for new paymnets
-            @payment.pay
-            redirect_to collection_path
-          end
-        end
+      if @payment.payment_method.type == "PaymentMethod::Check" and event == "pay" and @payment.state == "pending"
+        @payment.pay
+        @payment.order.update!
+        redirect_to collection_path
+      else
+        return old_fire
       end
     end
   end
+
 end
 
